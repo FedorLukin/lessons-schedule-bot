@@ -1,49 +1,62 @@
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram import Bot, Dispatcher
-from aiohttp import web
+from aiogram.exceptions import TelegramForbiddenError
 
-from bot.handlers import registration_callbacks, main_handlers, admin_panel
-
-from bot.config import BotConfig, load_bot_config, load_webhook_config
-
+from bot.handlers import registration_callbacks, main_handlers, admin_panel, developer_panel
+from bot.create_bot import bot, dp
 from cachetools import TTLCache
 
+import asyncio
 import logging
+from dotenv import dotenv_values
 
-errors_cache = TTLCache(maxsize=20, ttl=120)
-logs_format = '%(asctime)s - %(filename)s:%(lineno)d - %(message)s'
-bot_config: BotConfig = load_bot_config()
-webhook_config = load_webhook_config()
-
-WEBAPP_HOST = '0.0.0.0'
-WEBAPP_PORT = 3001
+errors_cache = TTLCache(maxsize=30, ttl=120)
 
 
-async def on_startup(bot: Bot) -> None:
-    await bot.set_webhook(webhook_config.webhook_url)
-    await bot.send_message(chat_id=bot_config.admin_ids[0], text='Бот запущен!!!')
+async def start_bot() -> None:
+    """
+    Уведомляет админов и разработчиков о запуске бота, вызывает функцию запуска бота.
+
+    Принимает:
+        None: функция ничего не принимает.
+
+    Возвращает:
+        None: функция ничего не возвращает.
+    """
+    env_vars = dotenv_values(".env")
+    admin_and_devs_ids = set(map(int, env_vars['ADMIN_IDS'].split(',') + env_vars['DEVELOPERS_IDS'].split(',')))
+    for id in admin_and_devs_ids:
+        try:
+            await bot.send_message(chat_id=id, text='бот запущен 🚀')
+        except TelegramForbiddenError:
+            pass
+
+    # Запуск бота
+    await main()
 
 
-async def on_shutdown(bot: Bot) -> None:
-    await bot.delete_webhook(drop_pending_updates=True)
-    await bot.send_message(chat_id=bot_config.admin_ids[0], text='Бот выключен!!!')
+async def main() -> None:
+    """
+    Настраивает логгирование, запускает бота, в случае ошибки перезапускает бота и логгирует ошибку.
 
+    Принимает:
+        None: функция ничего не принимает.
 
-def main():
-    storage = MemoryStorage()
-    dp = Dispatcher(storage=storage)
-    dp.include_routers(admin_panel.router, registration_callbacks.router, main_handlers.router)
-    dp.startup.register(on_startup)
-    dp.shutdown.register(on_shutdown)
-    bot = Bot(bot_config.token)
-    app = web.Application()
-    webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
-    webhook_requests_handler.register(app, path=webhook_config.webhook_path)
-    setup_application(app, dp, bot=bot)
-    web.run_app(app, host=WEBAPP_HOST, port=WEBAPP_PORT)
+    Возвращает:
+        None: функция ничего не возвращает.
+    """
+    while True:
+        try:
+            logs_format = '%(asctime)s - %(filename)s:%(lineno)d - %(message)s'
+            logging.basicConfig(level=logging.ERROR, filename='logs.log', filemode='w', format=logs_format)
+            dp.include_routers(admin_panel.router, developer_panel.router, registration_callbacks.router,
+                               main_handlers.router)
+            await bot.delete_webhook(drop_pending_updates=True)
+            await dp.start_polling(bot)
+        except Exception as ex:
+            error_name = ex.__class__.__name__
+            if not errors_cache.get(error_name):
+                errors_cache[error_name] = True
+                logging.error(ex)
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.ERROR, filename='logs.log', filemode='w', format=logs_format)
-    main()
+    asyncio.run(start_bot())

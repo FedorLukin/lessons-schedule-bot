@@ -5,13 +5,13 @@ from aiogram.types import CallbackQuery, Message
 from aiogram import Router, F
 
 from bot.keyboards.registration_keyboards import *
-
 from bot.keyboards.main_keyboards import main_user_kb
+from bot.keyboards.admin_panel_keyboards import admin_panels_kb
 
 from bot.middlewares.throttling import ThrottlingMiddleware
 
 from bot.db.requests import set_user, get_user
-
+from dotenv import dotenv_values
 from bot.misc.states import RegistrationSteps
 
 router = Router()
@@ -21,7 +21,9 @@ router.message.middleware(ThrottlingMiddleware())
 @router.message(Command('start'), StateFilter(default_state))
 async def start(message: Message, state: FSMContext) -> None:
     """
-    Обрабатывает команду /start, если пользователь не зарегистрирован.
+    Обрабатывает команду /start, если пользователь админ или разработчик,
+    отправляем ему консоль админа или разработчика, иначе если пользователь
+    не зарегистрирован - регистрируем.
     Переводит его в состояние выбора цифры класса.
 
     Аргументы:
@@ -31,6 +33,16 @@ async def start(message: Message, state: FSMContext) -> None:
     Возвращает:
         None: Функция ничего не возвращает.
     """
+    env_vars = dotenv_values(".env")
+
+    # Если пользователь админ или разработчик, приветствуем и отправляем консоль
+    if message.from_user.id in list(map(int, env_vars['ADMIN_IDS'].split(','))):
+        await message.answer(text=f'Здравствуйте, {message.from_user.first_name}! Вы являетесь администратором данного '
+                                  f'бота и можете загружать расписание или запускать рассылку уведомлений, для этого '
+                                  f'воспользуйтесь админ-панелью',
+                             reply_markup=admin_panels_kb(message.from_user.id))
+
+    # Если это обычный пользователь ион не зарегистрирован, запускаем регистрацию
     if not await get_user(message.from_user.id):
         await state.set_state(RegistrationSteps.class_num_choose)
         await message.answer('Привет, давай определимся с твоими классом и группой', reply_markup=start_menu_kb())
@@ -157,8 +169,7 @@ async def final_or_restart_registration(callback: CallbackQuery, state: FSMConte
         user_data = await state.get_data()
         user_id = callback.from_user.id
         class_letter = f'{user_data.get("num")} {user_data.get("letter")}'
-        class_group = int(user_data.get('cl_gr'))
-        uday_group = int(user_data.get('ud_gr'))
+        class_group, uday_group = int(user_data.get('cl_gr')), int(user_data.get('ud_gr'))
         await set_user(user_id, class_letter, class_group, uday_group)
         await state.clear()
         await callback.message.delete()

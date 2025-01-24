@@ -4,6 +4,9 @@ from datetime import date
 
 @dataclass
 class Lesson:
+    """
+    Датакласс для промежуточного хранения уроков из расписания, перед внесением в бд
+    """
     num: int
     info: str
     date: date

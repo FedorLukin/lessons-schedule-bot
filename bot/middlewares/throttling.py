@@ -46,14 +46,19 @@ class ThrottlingMiddleware(BaseMiddleware):
         Возвращает:
             Any | None: Результат выполнения обработчика, если запрос не превышает лимит, иначе None.
         """
+
+        # Получаем счётчик сообщений для пользователя
         user_id = message.from_user.id
         current_count = CACHE.get(user_id, 0)
 
+        # Если счётчик превышает 1 - игнорируем запрос
         if current_count > 1:
             return None
 
+        # Увеличиваем счётчик на 1 при запросе
         CACHE[user_id] = current_count + 1
 
+        # Предупреждаем пользователя при превышении лимита
         if current_count == 1:
             await message.answer(text='подождите 5 секунд и повторите запрос')
             return

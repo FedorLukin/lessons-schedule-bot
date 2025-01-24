@@ -17,12 +17,12 @@ import os
 
 class Parser:
     def __init__(self, filename: str):
-        self.workbook = openpyxl.load_workbook(f'./uploads/{filename}')
+        self.workbook = openpyxl.load_workbook(f'./bot/uploads/{filename}')
         self.date = dt.datetime.strptime(f'{filename.split('.xlsx')[0]}{dt.date.today().year}', "%d.%m%Y").date()
         self.weekday = dt.date.weekday(self.date)
         self.regular_lessons = []
         self.uday_lessons = []
-        os.remove(f'./uploads/{filename}')
+        os.remove(f'./bot/uploads/{filename}')
 
     def parent_of_merged_cell(self, cell: MergedCell) -> str:
         """
@@ -164,13 +164,14 @@ class Parser:
         Возвращает:
             str: Результат выполнения метода, сообщение об успехе или ошибке.
         """
-        # Удаление устаревших расписаний
+        # Удаляем устаревшие расписаний
         old_date = dt.date.today() - dt.timedelta(days=2)
         delete_old_schedules(old_date)
 
-        #  удаление расписания при повторной загрузке расписания
+        # Удаляем расписания при повторной загрузке расписания
         delete_repeated_schedule(self.date)
 
+        # Определяем на какой странице чьё расписание
         sh_10, sh_11 = None, None
         for i, sh in enumerate(self.workbook.sheetnames):
             if sh.strip() == '10':
@@ -180,9 +181,9 @@ class Parser:
             if sh_10 and sh_11:
                 break
 
-        # парсинг расписания 10-классников:
+        # Парсинг расписания 10-классников:
         try:
-            # универ-день (понедельник)
+            # Универ-день (понедельник)
             if self.weekday == 0:
                 sheet = self.workbook.worksheets[0] if not sh_10 else self.workbook.worksheets[sh_10]
                 times_10 = [self.cell_value(i).replace('\n', '') for i in sheet['c'][2:9] + sheet['c'][9:11]
@@ -190,7 +191,7 @@ class Parser:
                 self.uday_groups_schedule_parsing(sheet, times_10[:6], 2, 4, 8, 27)
                 self.uday_classes_schedule_parsing(sheet, times_10[6:], 9, 4, 12, 27)
 
-            # все остальные дни недели
+            # Все остальные дни недели
             else:
                 sheet = self.workbook.worksheets[1] if not isinstance(sh_10, int) else self.workbook.worksheets[sh_10]
                 ls_num = max([int(self.cell_value(i)) for i in sheet['B'][3:14] if str(self.cell_value(i)).isnumeric()])
@@ -201,9 +202,9 @@ class Parser:
             logging.error(ex)
             return f'Ошибка при парсинге расписания 10-х классов!\nОшибка:\n{ex}'
 
-        # парсинг расписания 11-классников:
+        # Парсинг расписания 11-классников:
         try:
-            # универ-день (среда)
+            # Универ-день (среда)
             if self.weekday == 2:
                 sheet = self.workbook.worksheets[0] if not sh_11 else self.workbook.worksheets[sh_11]
                 times_11 = [self.cell_value(i).replace('\n', '') for i in sheet['c'][3:9] + sheet['c'][10:12]
@@ -211,7 +212,7 @@ class Parser:
                 self.uday_groups_schedule_parsing(sheet, times_11[:6], 3, 4, 9, 23)
                 self.uday_classes_schedule_parsing(sheet, times_11[6:], 10, 4, 13, 23)
 
-            # все остальные дни недели
+            # Все остальные дни недели
             else:
                 sheet = self.workbook.worksheets[1] if not isinstance(sh_11, int) else self.workbook.worksheets[sh_11]
                 times_11 = [self.cell_value(i).replace('\n', '') for i in sheet['c'][3:11] if self.cell_value(i)]

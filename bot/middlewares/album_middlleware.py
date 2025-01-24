@@ -49,6 +49,7 @@ class AlbumMiddleware(BaseMiddleware):
         """
         # Проверка, существует ли media_group_id в album_data
         if event.media_group_id not in self.album_data:
+
             # Создание новой записи для медиа-группы
             self.album_data[event.media_group_id] = {"messages": []}
 

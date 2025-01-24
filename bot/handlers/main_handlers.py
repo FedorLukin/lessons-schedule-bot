@@ -18,7 +18,7 @@ router = Router()
 router.message.outer_middleware(ThrottlingMiddleware())
 
 
-@router.message(F.text == 'профиль 👤')
+@router.message(F.text == 'профиль 👨🏻‍🎓')
 async def get_profile_info(message: Message, state: FSMContext) -> None:
     """
     Обрабатывает запрос на получение информации о профиле пользователя, если информация

@@ -17,10 +17,18 @@ class AdminPanelPages(StatesGroup):
     """
     Класс группы состояний Админ-панели.
     """
-    schedule_add = State()
     schedule_file_request = State()
     schedule_file_parsing = State()
     notification_recievers_choose = State()
     notification_content_request = State()
     notification_confirmation = State()
     notificaton_start = State()
+
+
+class DevPanelStates(StatesGroup):
+    """
+    Класс группы состояний панели разработчика.
+    """
+    new_admin_request = State()
+    new_admin_adding = State()
+    stop_bot = State()

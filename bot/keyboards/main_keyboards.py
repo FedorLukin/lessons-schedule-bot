@@ -31,7 +31,7 @@ def main_user_kb() -> ReplyKeyboardMarkup:
     """
     kb = ReplyKeyboardBuilder()
     kb.add(KeyboardButton(text='расписание 📋'))
-    kb.add(KeyboardButton(text='профиль 👤'))
+    kb.add(KeyboardButton(text='профиль 👨🏻‍🎓'))
     kb.adjust(1)
     return kb.as_markup(resize_keyboard=True)
 
@@ -51,10 +51,15 @@ def day_choose_kb(today_flag: bool, tomorrow_flag: bool, today: date, tomorrow: 
     """
     if today_flag or tomorrow_flag:
         kb = InlineKeyboardBuilder()
+
+        # добавляем кнопку "сегодня", если есть расписание на сегодня
         if today_flag:
             kb.button(text=f'сегодня {today.strftime('%d.%m')}', callback_data=f'date={today.strftime('%d%m%y')}')
+
+        # добавляем кнопку "завтра", если есть расписание на завтра
         if tomorrow_flag:
             kb.button(text=f'завтра {tomorrow.strftime('%d.%m')}', callback_data=f'date={tomorrow.strftime('%d%m%y')}')
         kb.adjust(1)
         return kb.as_markup(resize_keyboard=True)
+
     return None

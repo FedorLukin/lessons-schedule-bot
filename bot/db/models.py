@@ -1,7 +1,8 @@
 from sqlalchemy import BigInteger, Integer, Text, String, Date
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs
-from datetime import date
+
+import datetime
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -28,7 +29,7 @@ class Lesson(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     lesson_number: Mapped[int] = mapped_column(Integer, nullable=False)
     lesson_info: Mapped[str] = mapped_column(Text, nullable=False)
-    date: Mapped[date] = mapped_column(Date, nullable=False)
+    date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
 
 class Regular_schedule(Lesson):

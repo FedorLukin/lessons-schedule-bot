@@ -1,11 +1,9 @@
 from aiogram.utils.media_group import MediaGroupBuilder
 from aiogram.fsm.context import FSMContext
 from aiogram.exceptions import TelegramForbiddenError
-from aiogram.fsm.state import default_state
-from aiogram.filters import Command, StateFilter
+from aiogram.filters import StateFilter
 from aiogram.types import CallbackQuery, Message, ContentType
-from aiogram import Bot
-from aiogram import Router, F
+from aiogram import Bot, Router, F
 
 from bot.keyboards.admin_panel_keyboards import *
 
@@ -17,30 +15,14 @@ from bot.misc.states import AdminPanelPages
 
 from bot.db.requests import get_users_ids, get_all_users_ids, delete_user
 
+
 import datetime as dt
 import asyncio
 
 router = Router()
 router.message.middleware(AdminAccessMiddleware())
+router.callback_query.middleware(AdminAccessMiddleware())
 router.message.middleware(AlbumMiddleware())
-
-
-@router.message(Command('start'), StateFilter(default_state))
-async def start(message: Message, state: FSMContext) -> None:
-    """
-    Приветствует администратора бота, информирует его о возможностях админа.
-
-    Аргументы:
-        message (Message): Сообщение от админа.
-        state (FSMContext): Контекст состояния для управления состоянием админ-панели и хранения временных данных.
-
-    Возвращает:
-        None: Функция ничего не возвращает.
-    """
-    await message.answer(text=f'Здравствуйте, {message.from_user.first_name}! Вы являетесь администратором данного '
-                              f'бота и можете загружать расписание или запускать рассылку уведомлений, для этого '
-                              f'воспользуйтесь админ-панелью',
-                         reply_markup=admin_panel_inline_button())
 
 
 @router.message(F.text == 'админ-панель 🔐')
@@ -49,13 +31,13 @@ async def admin_panel(message: Message, state: FSMContext) -> None:
     Отправляет главную страницу админ-панели.
 
     Аргументы:
-        message (Message): Сообщение от пользователя.
+        message (Message): Сообщение от админа.
         state (FSMContext): Контекст состояния для управления состоянием админ-панели и хранения временных данных.
 
     Возвращает:
         None: Функция ничего не возвращает.
     """
-    await message.answer(text='Добро пожаловать в админ-панель!', reply_markup=admin_panel_main_kb())
+    await message.answer(text='Добро пожаловать в админ-панель!', reply_markup=admin_panel_kb())
     await state.clear()
 
 
@@ -81,10 +63,10 @@ async def admin_panel_back(callback: CallbackQuery, state: FSMContext) -> None:
             await message.delete()
     # Отправляем админ-панель, удалив при необходимости сообщение для рассылки
     if callback.message.content_type == ContentType.TEXT:
-        await callback.message.edit_text(text='Добро пожаловать в админ-панель!', reply_markup=admin_panel_main_kb())
+        await callback.message.edit_text(text='Добро пожаловать в админ-панель!', reply_markup=admin_panel_kb())
     else:
         await callback.message.delete()
-        await callback.message.answer(text='Добро пожаловать в админ-панель!', reply_markup=admin_panel_main_kb())
+        await callback.message.answer(text='Добро пожаловать в админ-панель!', reply_markup=admin_panel_kb())
     await state.clear()
 
 
@@ -116,7 +98,7 @@ async def notification_recievers_choose(callback: CallbackQuery) -> None:
     Возвращает:
         None: Функция ничего не возвращает.
     """
-    await callback.message.edit_text(text='Выберите адресатов рассылки', reply_markup=recievers_choose())
+    await callback.message.edit_text(text='Выберите адресатов рассылки', reply_markup=recievers_choose_kb())
 
 
 @router.callback_query(F.message.text == 'Выберите адресатов рассылки', F.data != 'back')
@@ -305,7 +287,7 @@ async def schedule_file_parsing(message: Message, state: FSMContext, bot: Bot) -
     # Проверяем, что сообщение содержит документ и файл имеет правильный формат
     if message.document and message.document.file_name.endswith('.xlsx'):
         file_name = message.document.file_name
-        await bot.download(message.document.file_id, destination=f'./uploads/{file_name}')
+        await bot.download(message.document.file_id, destination=f'./bot/uploads/{file_name}')
         parser = Parser(file_name)
         parsing_result = parser.parse()
 
