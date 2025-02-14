@@ -18,7 +18,7 @@ router = Router()
 router.message.middleware(ThrottlingMiddleware())
 
 
-@router.message(Command('start'), StateFilter(default_state))
+@router.message(Command('start'))
 async def start(message: Message, state: FSMContext) -> None:
     """
     Обрабатывает команду /start, если пользователь админ или разработчик,
@@ -36,14 +36,14 @@ async def start(message: Message, state: FSMContext) -> None:
     env_vars = dotenv_values(".env")
 
     # Если пользователь админ или разработчик, приветствуем и отправляем консоль
-    if message.from_user.id in list(map(int, env_vars['ADMIN_IDS'].split(','))):
+    if message.from_user.id in set(map(int, env_vars['ADMIN_IDS'].split(',') + env_vars['DEVELOPERS_IDS'].split(','))):
         await message.answer(text=f'Здравствуйте, {message.from_user.first_name}! Вы являетесь администратором данного '
                                   f'бота и можете загружать расписание или запускать рассылку уведомлений, для этого '
                                   f'воспользуйтесь админ-панелью',
                              reply_markup=admin_panels_kb(message.from_user.id))
 
-    # Если это обычный пользователь ион не зарегистрирован, запускаем регистрацию
-    if not await get_user(message.from_user.id):
+    # Если это обычный пользователь и он не зарегистрирован, запускаем регистрацию
+    elif not await get_user(message.from_user.id):
         await state.set_state(RegistrationSteps.class_num_choose)
         await message.answer('Привет, давай определимся с твоими классом и группой', reply_markup=start_menu_kb())
 

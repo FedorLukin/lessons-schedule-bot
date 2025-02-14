@@ -148,7 +148,7 @@ async def new_admin_adding(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     new_admin_id = data['id']
     env_vars = dotenv_values(".env")
-    admins_ids = list(map(int, env_vars['ADMIN_IDS'].split(',')))
+    admins_ids = env_vars['ADMIN_IDS'].split(',')
     admins_ids.append(new_admin_id)
 
     # Читаем переменные окружения
@@ -162,7 +162,6 @@ async def new_admin_adding(message: Message, state: FSMContext) -> None:
 
     await message.answer(text='новый админ добавлен 📁')
     await state.clear()
-
 
 
 @router.callback_query(F.data == 'stop_bot')

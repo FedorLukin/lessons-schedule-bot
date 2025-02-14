@@ -98,4 +98,5 @@ async def process_user_blocked_bot(event: ChatMemberUpdated):
     Возвращает:
         None: Функция ничего не возвращает.
     """
-    await delete_user(event.from_user.id)
+    if get_user(event.from_user.id):
+        await delete_user(event.from_user.id)

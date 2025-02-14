@@ -1,4 +1,4 @@
-from aiogram.exceptions import TelegramForbiddenError
+from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 
 from bot.handlers import registration_callbacks, main_handlers, admin_panel, developer_panel
 from bot.create_bot import bot, dp
@@ -26,7 +26,7 @@ async def start_bot() -> None:
     for id in admin_and_devs_ids:
         try:
             await bot.send_message(chat_id=id, text='бот запущен 🚀')
-        except TelegramForbiddenError:
+        except (TelegramForbiddenError, TelegramBadRequest):
             pass
 
     # Запуск бота
