@@ -1,7 +1,9 @@
 from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 
 from bot.handlers import registration_callbacks, main_handlers, admin_panel, developer_panel
+from bot.db.requests import get_admins
 from bot.create_bot import bot, dp
+
 from cachetools import TTLCache
 
 import asyncio
@@ -22,8 +24,10 @@ async def start_bot() -> None:
         None: функция ничего не возвращает.
     """
     env_vars = dotenv_values(".env")
-    admin_and_devs_ids = set(map(int, env_vars['ADMIN_IDS'].split(',') + env_vars['DEVELOPERS_IDS'].split(',')))
-    for id in admin_and_devs_ids:
+    devs_ids = list(map(int, env_vars['DEVELOPERS_IDS'].split(',')))
+    admins_ids = await get_admins()
+    admins_and_devs = set(admins_ids + devs_ids)
+    for id in admins_and_devs:
         try:
             await bot.send_message(chat_id=id, text='бот запущен 🚀')
         except (TelegramForbiddenError, TelegramBadRequest):

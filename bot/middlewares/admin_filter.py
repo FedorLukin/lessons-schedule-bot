@@ -3,7 +3,7 @@ from aiogram import BaseMiddleware
 
 from typing import Any, Awaitable, Callable, Dict
 
-from dotenv import dotenv_values
+from bot.db.requests import is_admin
 
 
 class AdminAccessMiddleware(BaseMiddleware):
@@ -22,9 +22,6 @@ class AdminAccessMiddleware(BaseMiddleware):
                  message: Message,
                  data: Dict[str, Any]): Проверяет пользователя на наличие прав администратора.
     """
-    env_vars = dotenv_values(".env")
-    admin_and_devs_ids = list(map(int, env_vars['ADMIN_IDS'].split(',') + env_vars['DEVELOPERS_IDS'].split(',')))
-
     async def __call__(
             self,
             handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
@@ -42,8 +39,8 @@ class AdminAccessMiddleware(BaseMiddleware):
         Возвращает:
             Any: Возвращает результат вызова обработчика, если пользователь - администратор, иначе возвращает None.
         """
-        # Получаем список ID администраторов из конфигурации бота
-        if message.from_user.id not in self.admin_and_devs_ids:
+        # Проверяем, является ли пользователь админом
+        if not await is_admin(message.from_user.id):
 
             # Если пользователь не администратор, прерываем выполнение
             return None

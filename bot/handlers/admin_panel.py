@@ -13,7 +13,7 @@ from bot.middlewares.admin_filter import AdminAccessMiddleware
 from bot.misc.parsing import Parser
 from bot.misc.states import AdminPanelPages
 
-from bot.db.requests import get_users_ids, get_all_users_ids, delete_user
+from bot.db.requests import get_users, get_all_users, delete_user
 
 
 import datetime as dt
@@ -232,7 +232,7 @@ async def notifaction_start(callback: CallbackQuery, state: FSMContext, bot: Bot
 
     # Определяем номер класса и получаем список студентов, уведомляем админа о начале рассылки
     cl_num = recievers.split()[0]
-    students = await get_users_ids(cl_num) if recievers != 'все классы' else await get_all_users_ids()
+    students = await get_users(cl_num) if recievers != 'все классы' else await get_all_users()
     msg = await callback.message.answer(text='рассылка в процессе\n' + '⬜️' * 10)
     rows_num = len(students)
 
@@ -296,7 +296,7 @@ async def schedule_file_parsing(message: Message, state: FSMContext, bot: Bot) -
 
         # Если парсинг прошел успешно, запускаем оповещение
         if parsing_result == 'Расписание сохранено успешно!':
-            students = await get_all_users_ids()
+            students = await get_all_users()
 
             # Определяем день, на который загружено расписание
             if parser.date == dt.datetime.today().date():

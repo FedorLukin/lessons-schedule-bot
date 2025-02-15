@@ -1,5 +1,4 @@
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state
 from aiogram.filters import Command, StateFilter
 from aiogram.types import CallbackQuery, Message
 from aiogram import Router, F
@@ -10,8 +9,7 @@ from bot.keyboards.admin_panel_keyboards import admin_panels_kb
 
 from bot.middlewares.throttling import ThrottlingMiddleware
 
-from bot.db.requests import set_user, get_user
-from dotenv import dotenv_values
+from bot.db.requests import set_user, get_user, is_admin
 from bot.misc.states import RegistrationSteps
 
 router = Router()
@@ -33,10 +31,8 @@ async def start(message: Message, state: FSMContext) -> None:
     Возвращает:
         None: Функция ничего не возвращает.
     """
-    env_vars = dotenv_values(".env")
-
-    # Если пользователь админ или разработчик, приветствуем и отправляем консоль
-    if message.from_user.id in set(map(int, env_vars['ADMIN_IDS'].split(',') + env_vars['DEVELOPERS_IDS'].split(','))):
+    # Если пользователь админ или разработчик, приветствуем и отправляем клавиатуру выбора панели
+    if await is_admin(message.from_user.id):
         await message.answer(text=f'Здравствуйте, {message.from_user.first_name}! Вы являетесь администратором данного '
                                   f'бота и можете загружать расписание или запускать рассылку уведомлений, для этого '
                                   f'воспользуйтесь админ-панелью',

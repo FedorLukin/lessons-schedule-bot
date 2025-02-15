@@ -9,7 +9,6 @@ from openpyxl.cell.cell import Cell, MergedCell
 from openpyxl.worksheet.worksheet import Worksheet
 
 import datetime as dt
-import traceback
 import openpyxl
 import logging
 import os
@@ -200,7 +199,7 @@ class Parser:
 
         except Exception as ex:
             logging.error(ex)
-            return f'Ошибка при парсинге расписания 10-х классов!\nОшибка:\n{ex}'
+            return 'Ошибка при парсинге расписания 10-х классов!'
 
         # Парсинг расписания 11-классников:
         try:
@@ -220,7 +219,7 @@ class Parser:
 
         except Exception as ex:
             logging.error(ex)
-            return f'Ошибка при парсинге расписания 11-х классов!\nОшибка:\n{traceback.format_exc()}'
+            return 'Ошибка при парсинге расписания 11-х классов!'
 
         return self.saving_to_database()
 

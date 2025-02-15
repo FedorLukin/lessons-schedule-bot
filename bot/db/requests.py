@@ -3,11 +3,58 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, exists
 
 from .database import DatabaseConnector
-from .models import User, Regular_schedule, Uday_schedule
+from .models import User, Admin, Regular_schedule, Uday_schedule
 from bot.misc.lesson import Lesson
 
 from typing import List, Tuple
 from datetime import date
+
+
+@DatabaseConnector()
+async def is_admin(session: AsyncSession, tg_id: int) -> bool:
+    """
+    Проверяет, является ли пользователь администратором.
+
+    Параметры:
+        session (AsyncSession): Сессия для работы с базой данных.
+        tg_id (int): Уникальный идентификатор пользователя в Telegram.
+
+    Возвращает:
+        bool: True, если пользователь является администратором, иначе False.
+    """
+    return await session.scalar(exists().where(Admin.id == tg_id).select())
+
+
+@DatabaseConnector()
+async def set_admin(session: AsyncSession, tg_id: int) -> None:
+    """
+    Добавляет нового администратора в базу данных.
+
+    Параметры:
+        session (AsyncSession): Сессия для работы с базой данных.
+        tg_id (int): Уникальный идентификатор пользователя в Telegram.
+
+    Возвращает:
+        None: Функция ничего не возвращает.
+    """
+    new_admin = Admin(id=tg_id)
+    await session.merge(new_admin)
+    await session.commit()
+
+
+@DatabaseConnector()
+async def get_admins(session: AsyncSession) -> List[int]:
+    """
+    Получает список идентификаторов администраторов из базы данных.
+
+    Параметры:
+        session (AsyncSession): Сессия для работы с базой данных.
+
+    Возвращает:
+        List[int]: Список идентификаторов администраторов.
+    """
+    result = await session.execute(select(Admin.id))
+    return list(result.scalars())
 
 
 @DatabaseConnector()
@@ -63,7 +110,7 @@ async def delete_user(session: AsyncSession, tg_id: int) -> None:
 
 
 @DatabaseConnector()
-async def get_users_ids(session: AsyncSession, class_num: str) -> List[int]:
+async def get_users(session: AsyncSession, class_num: str) -> List[int]:
     """
     Получает список уникальных идентификаторов пользователей по номеру класса.
 
@@ -79,7 +126,7 @@ async def get_users_ids(session: AsyncSession, class_num: str) -> List[int]:
 
 
 @DatabaseConnector()
-async def get_all_users_ids(session: AsyncSession) -> List[int]:
+async def get_all_users(session: AsyncSession) -> List[int]:
     """
     Получает список всех уникальных идентификаторов пользователей.
 

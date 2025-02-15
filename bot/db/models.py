@@ -68,3 +68,14 @@ class User(Base):
     class_letter: Mapped[str] = mapped_column(String(5), nullable=False)
     class_group: Mapped[int] = mapped_column(Integer, nullable=False)
     uday_group: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class Admin(Base):
+    """
+    Модель администратора бота.
+
+    Этот класс представляет админитратора бота, включает только идентификатор админа.
+    Необходим для определения наличия у пользователя прав администратора.
+    """
+    __tablename__ = 'admins'
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, unique=True)

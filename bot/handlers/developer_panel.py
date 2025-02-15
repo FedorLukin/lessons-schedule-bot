@@ -5,11 +5,11 @@ from aiogram.types import CallbackQuery, Message
 from aiogram import Bot
 from aiogram import Router, F
 
-from bot.db.requests import get_users_ids
-
 from bot.keyboards.admin_panel_keyboards import *
 
 from bot.middlewares.admin_filter import AdminAccessMiddleware
+
+from bot.db.requests import get_users, set_admin
 
 from bot.misc.states import DevPanelStates
 
@@ -71,7 +71,6 @@ async def logs_stats(callback: CallbackQuery) -> None:
         await callback.message.answer(text='за последние двое суток ошибок не было ✅')
 
 
-
 @router.callback_query(F.data == 'stats')
 async def users_stats(callback: CallbackQuery) -> None:
     """
@@ -86,8 +85,8 @@ async def users_stats(callback: CallbackQuery) -> None:
         None: Функция ничего не возвращает.
     """
     await callback.message.delete()
-    ten_class_users = len(await get_users_ids('10'))
-    eleven_class_users = len(await get_users_ids('11'))
+    ten_class_users = len(await get_users('10'))
+    eleven_class_users = len(await get_users('11'))
     await callback.message.answer(text=f'статистика по пользователям бота 📈\nпользователей всего:'
                                        f' {ten_class_users + eleven_class_users}\nучеников 10-х классов:'
                                        f' {ten_class_users}👩🏼‍💻\nучеников 11-х классов: {eleven_class_users}🧑🏼‍💻')
@@ -146,20 +145,8 @@ async def new_admin_adding(message: Message, state: FSMContext) -> None:
         None: Функция ничего не возвращает.
     """
     data = await state.get_data()
-    new_admin_id = data['id']
-    env_vars = dotenv_values(".env")
-    admins_ids = env_vars['ADMIN_IDS'].split(',')
-    admins_ids.append(new_admin_id)
-
-    # Читаем переменные окружения
-    with open('./.env', 'r') as env_file:
-        data = list(map(str.strip, env_file.readlines()))
-
-    # Заменяем строку с id админов строкой с новым id
-    with open('./.env', 'w') as env_file:
-        data[1] = 'ADMIN_IDS=' + ','.join(admins_ids)
-        env_file.write('\n'.join(data))
-
+    new_admin_id = int(data['id'])
+    await set_admin(new_admin_id)
     await message.answer(text='новый админ добавлен 📁')
     await state.clear()
 
