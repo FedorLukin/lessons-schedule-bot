@@ -18,7 +18,7 @@ class Parser:
     def __init__(self, filename: str):
         self.workbook = openpyxl.load_workbook(f'./bot/uploads/{filename}')
         self.date = dt.datetime.strptime(f'{filename.split('.xlsx')[0]}{dt.date.today().year}', "%d.%m%Y").date()
-        self.weekday = dt.date.weekday(self.date)
+        self.weekday = self.date.weekday()
         self.regular_lessons = []
         self.uday_lessons = []
         os.remove(f'./bot/uploads/{filename}')

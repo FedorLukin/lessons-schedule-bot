@@ -173,16 +173,20 @@ async def get_user_schedule(session: AsyncSession, letter: str, group: int, uday
     Возвращает:
         List[str]: Список информации об уроках на указанную дату.
     """
-    uday_lessons = await session.execute(select(Uday_schedule.lesson_info).where(
-        Uday_schedule.uday_group == uday_group,
-        Uday_schedule.date == date).order_by(Uday_schedule.lesson_number))
+    uday_lessons = []
+    if letter.startswith('10') and date.weekday() == 0 or letter.startswith('11') and date.weekday() == 2:
+        uday_lessons = await session.execute(select(Uday_schedule.lesson_info).where(
+            Uday_schedule.uday_group == uday_group,
+            Uday_schedule.date == date).order_by(Uday_schedule.lesson_number))
+        uday_lessons = list(uday_lessons.scalars())
 
     regular_lessons = await session.execute(select(Regular_schedule.lesson_info).where(
         Regular_schedule.class_letter == letter,
         Regular_schedule.class_group == group,
         Regular_schedule.date == date).order_by(Regular_schedule.lesson_number))
+    regular_lessons = list(regular_lessons.scalars())
 
-    return list(uday_lessons.scalars()) + list(regular_lessons.scalars())
+    return uday_lessons + regular_lessons
 
 
 @DatabaseConnector(connection_is_async=False)
