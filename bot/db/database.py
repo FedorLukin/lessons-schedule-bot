@@ -44,7 +44,7 @@ class DatabaseConnector:
             self.engine = create_async_engine(url=f'postgresql+asyncpg{load_db_URL()}')
             self.session_maker = async_sessionmaker(bind=self.engine, expire_on_commit=False)
         else:
-            self.engine = create_engine(url=f'postgresql+psycopg2{load_db_URL()}')
+            self.engine = create_engine(url=f'postgresql+psycopg2{load_db_URL()}', pool_pre_ping=True)
             self.session_maker = sessionmaker(bind=self.engine, expire_on_commit=False)
 
     def async_connection(self, method):
