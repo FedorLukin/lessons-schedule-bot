@@ -312,6 +312,7 @@ async def schedule_file_parsing(message: Message, state: FSMContext, bot: Bot) -
 
                 # Задержка для избежения нарушения ограничений телеграма
                 await asyncio.sleep(0.035)
+
     else:
         await message.answer(text='Файл с расписанием должен быть формата .xlsx, попробуйте снова',
                              reply_markup=back_to_admin_kb())

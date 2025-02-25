@@ -179,6 +179,7 @@ async def get_user_schedule(session: AsyncSession, letter: str, group: int, uday
             Uday_schedule.uday_group == uday_group,
             Uday_schedule.date == date).order_by(Uday_schedule.lesson_number))
         uday_lessons = list(uday_lessons.scalars())
+        group = 0
 
     regular_lessons = await session.execute(select(Regular_schedule.lesson_info).where(
         Regular_schedule.class_letter == letter,

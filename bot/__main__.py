@@ -51,7 +51,7 @@ async def main() -> None:
         try:
             logs_format = '%(asctime)s - %(filename)s:%(lineno)d - %(message)s'
             logging.basicConfig(level=logging.ERROR, filename='logs.log', filemode='w', format=logs_format)
-            dp.include_routers(admin_panel.router, developer_panel.router, registration_callbacks.router,
+            dp.include_routers(developer_panel.router, admin_panel.router, registration_callbacks.router,
                                main_handlers.router)
             await bot.delete_webhook(drop_pending_updates=True)
             await dp.start_polling(bot)
