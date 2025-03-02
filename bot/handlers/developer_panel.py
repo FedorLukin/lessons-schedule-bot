@@ -9,7 +9,7 @@ from bot.keyboards.admin_panel_keyboards import *
 
 from bot.middlewares.admin_filter import AdminAccessMiddleware
 
-from bot.db.requests import get_users, set_admin
+from bot.db.requests import get_users, set_admin, get_admins
 
 from bot.misc.states import DevPanelStates
 
@@ -181,8 +181,7 @@ async def stop_bot(message: Message, state: FSMContext, bot: Bot) -> None:
         None: Функция ничего не возвращает.
     """
     await message.reply("Останавливаю бота...")
-    env_vars = dotenv_values(".env")
-    admin_and_devs_ids = set(map(int, env_vars['ADMIN_IDS'].split(',') + env_vars['DEVELOPERS_IDS'].split(',')))
+    admin_and_devs_ids = await get_admins()
 
     # Уведомляем админов и разрабов об остановке бота
     for id in admin_and_devs_ids:
