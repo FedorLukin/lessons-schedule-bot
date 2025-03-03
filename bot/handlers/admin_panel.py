@@ -308,7 +308,11 @@ async def schedule_file_parsing(message: Message, state: FSMContext, bot: Bot) -
 
             # Уведомляем учеников о загрузке расписании
             for student_id in students:
-                await bot.send_message(chat_id=student_id, text=f'загружено расписание на {day}🗓')
+                try:
+                    await bot.send_message(chat_id=student_id, text=f'загружено расписание на {day}🗓')
+
+                except TelegramForbiddenError:
+                    await delete_user(student_id)
 
                 # Задержка для избежения нарушения ограничений телеграма
                 await asyncio.sleep(0.035)

@@ -1,6 +1,5 @@
 from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 
-from bot.handlers import registration_callbacks, main_handlers, admin_panel, developer_panel
 from bot.db.requests import get_admins
 from bot.create_bot import bot, dp
 
@@ -51,8 +50,6 @@ async def main() -> None:
         try:
             logs_format = '%(asctime)s - %(filename)s:%(lineno)d - %(message)s'
             logging.basicConfig(level=logging.ERROR, filename='logs.log', filemode='w', format=logs_format)
-            dp.include_routers(developer_panel.router, admin_panel.router, registration_callbacks.router,
-                               main_handlers.router)
             await bot.delete_webhook(drop_pending_updates=True)
             await dp.start_polling(bot)
         except Exception as ex:

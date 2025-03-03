@@ -13,8 +13,6 @@ from bot.db.requests import get_users, set_admin, get_admins
 
 from bot.misc.states import DevPanelStates
 
-from dotenv import dotenv_values
-
 import datetime as dt
 import sys
 
