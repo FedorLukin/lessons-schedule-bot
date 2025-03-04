@@ -48,7 +48,6 @@ async def main() -> None:
     """
     while True:
         try:
-            print(1)
             logs_format = '%(asctime)s - %(filename)s:%(lineno)d - %(message)s'
             logging.basicConfig(level=logging.ERROR, filename='logs.log', filemode='w', format=logs_format)
             await bot.delete_webhook(drop_pending_updates=True)
