@@ -48,11 +48,13 @@ async def main() -> None:
     """
     while True:
         try:
+            print(1)
             logs_format = '%(asctime)s - %(filename)s:%(lineno)d - %(message)s'
             logging.basicConfig(level=logging.ERROR, filename='logs.log', filemode='w', format=logs_format)
             await bot.delete_webhook(drop_pending_updates=True)
             await dp.start_polling(bot)
         except Exception as ex:
+            await dp.stop_polling()
             error_name = ex.__class__.__name__
             if not errors_cache.get(error_name):
                 errors_cache[error_name] = True
