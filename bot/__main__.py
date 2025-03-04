@@ -52,6 +52,7 @@ async def main() -> None:
             logging.basicConfig(level=logging.ERROR, filename='logs.log', filemode='w', format=logs_format)
             await bot.delete_webhook(drop_pending_updates=True)
             await dp.start_polling(bot)
+
         except Exception as ex:
             await dp.stop_polling()
             error_name = ex.__class__.__name__
