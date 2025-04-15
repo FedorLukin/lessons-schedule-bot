@@ -20,7 +20,7 @@ def admin_panels_kb(user_id: int) -> ReplyKeyboardMarkup:
 
     # Если пользоатель разработчик, добавляем кнопку вызова панели разработчика
     if user_id in list(map(int, env_vars['DEVELOPERS_IDS'].split(','))):
-        kb.add(KeyboardButton(text='панель разработчика ⚙️'))
+        kb.add(KeyboardButton(text='devtools ⚙️'))
     kb.adjust(1)
     return kb.as_markup(resize_keyboard=True)
 

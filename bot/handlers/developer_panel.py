@@ -22,7 +22,7 @@ router.message.middleware(AdminAccessMiddleware())
 router.callback_query.middleware(AdminAccessMiddleware())
 
 
-@router.message(F.text == 'панель разработчика ⚙️')
+@router.message(F.text == 'devtools ⚙️')
 async def developer_panel(message: Message, state: FSMContext) -> None:
     """
     Отправляет главную страницу панели разработчика.

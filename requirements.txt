@@ -1,7 +1,12 @@
 aiogram==3.17.0
 alembic==1.14.0
+APScheduler==3.11.0  
 asyncpg==0.30.0
+beautifulsoup==4.13.3
 cachetools==5.5.0
+greenlet==3.1.1
 openpyxl==3.1.5
+psycopg2==2.9.10
 python-dotenv==1.0.1
+requests==2.32.3
 SQLAlchemy==2.0.36

@@ -1,15 +1,23 @@
 from bot.db.requests import add_regular_lessons, add_uday_lessons
 from bot.db.requests import delete_old_schedules, delete_repeated_schedule
+from bot.db.requests import get_all_users, delete_user
+
 
 from .lesson import Lesson
 
-from typing import Union
+from aiogram.exceptions import TelegramForbiddenError
+from aiogram import Bot
 
-from openpyxl.cell.cell import Cell, MergedCell
 from openpyxl.worksheet.worksheet import Worksheet
+from openpyxl.cell.cell import Cell, MergedCell
+from requests import Session, post
+from typing import Union
+from bs4 import BeautifulSoup
+from re import findall
 
 import datetime as dt
 import openpyxl
+import asyncio
 import logging
 import os
 
@@ -241,3 +249,42 @@ class Parser:
             return f'Ошибка при сохранении расписания в базу данных!\nОшибка:\n{ex}'
 
         return 'Расписание сохранено успешно!'
+    
+
+async def parse_schedule_from_eljur(today, tomorrow, bot: Bot):
+    env_vars = dotenv_values(".env")
+    eljur_login, eljur_password = env_vars['ELJUR_LOGIN'], env_vars['ELJUR_PASSWORD']
+    session = Session()
+    url1 = f"https://fms.eljur.ru/ajaxauthorize"
+    url2 = f"https://fms.eljur.ru/journal-board-action"
+    session.post(url=url1, data={'username': eljur_login, 'password': eljur_password})
+    page = session.get(url=url2)
+    soup = BeautifulSoup(page.text, "html.parser")
+
+    for obj in soup.find_all('div', class_='board-item__content'):
+        text = obj.p.get_text()
+        if 'расписание' in text.lower():
+            date = findall(r'[0-9]{2}.[0-9]{2}', text)[0]
+            if date == tomorrow.strftime('%d.%m'):
+                schedule_file_url = obj.a['href']
+                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+                schedule = session.get(url=schedule_file_url, headers=headers)
+                with open(f'./bot/uploads/{date}.xlsx', 'wb') as res:
+                    res.write(schedule.content)
+                parsing_result = Parser(f'{date}.xlsx').parse()                    
+                if parsing_result == 'Расписание сохранено успешно!':
+                    students = await get_all_users()
+                    for student_id in students:
+                        try:
+                            await bot.send_message(chat_id=student_id, text=f'загружено расписание на завтра🗓')
+                        except TelegramForbiddenError:
+                            await delete_user(student_id)
+
+                        # Задержка для избежения нарушения ограничений телеграма
+                        await asyncio.sleep(0.035)
+                    return True
+
+            elif dt.datetime.strptime(date, '%d/%m') < today:
+                break
+
+    return False
